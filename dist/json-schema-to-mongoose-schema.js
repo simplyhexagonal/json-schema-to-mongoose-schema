@@ -36,7 +36,7 @@ var import_lodash = __toModule(require("lodash"));
 var import_mongoose = __toModule(require("mongoose"));
 
 // package.json
-var version = "1.0.0";
+var version = "1.0.1";
 
 // src/index.ts
 var schemaTypeMap = {
