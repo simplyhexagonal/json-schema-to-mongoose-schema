@@ -20,8 +20,8 @@
       "url": "http://jeanlescure.io/"
     }
   ],
-  "main": "dist/package.js",
-  "typings": "dist/package.d.ts",
+  "main": "dist/json-schema-to-mongoose-schema.js",
+  "typings": "dist/json-schema-to-mongoose-schema.d.ts",
   "scripts": {
     "dev": "./scripts/dev",
     "test": "./scripts/test",
