@@ -1,6 +1,6 @@
 {
   "name": "@simplyhexagonal/json-schema-to-mongoose-schema",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Type-safe function to convert JSON Schema (draft v4+) to Mongoose (v5, v6) Schema",
   "keywords": [
     "json",
