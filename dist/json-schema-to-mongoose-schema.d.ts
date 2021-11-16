@@ -55,5 +55,5 @@ export declare const traverseDefinitions: (definitions: JsonSchema['definitions'
 } | {
     [x: string]: SchemaDefinitionProperty<any> | undefined;
 })[];
-declare const jsonSchemaToMongooseSchema: (jsonSchema: JsonSchema, definitionKey: string) => Schema<JsonSchema, import("mongoose").Model<JsonSchema, any, any, any>, {}>;
+declare const jsonSchemaToMongooseSchema: (jsonSchema: JsonSchema, definitionKey: string) => Schema<any, import("mongoose").Model<any, any, any, any>, {}>;
 export default jsonSchemaToMongooseSchema;
