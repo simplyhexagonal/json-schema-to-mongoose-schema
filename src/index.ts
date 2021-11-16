@@ -229,7 +229,7 @@ const jsonSchemaToMongooseSchema = (jsonSchema: JsonSchema, definitionKey: strin
   if (_.isPlainObject(definitions) && definitions.hasOwnProperty(definitionKey)) {
     const schema = traverseDefinitions(definitions, definitionKey);
 
-    return schema as Schema<JsonSchema>;
+    return schema as Schema;
   }
 
   throw new Error('Invalid JSON Schema');
