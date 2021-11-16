@@ -1,0 +1,1 @@
+'undefined'!=typeof module&&(module.exports=dist/json-schema-to-mongoose-schema.js.default),'undefined'!=typeof window&&(dist/json-schema-to-mongoose-schema.js=dist/json-schema-to-mongoose-schema.js.default);
