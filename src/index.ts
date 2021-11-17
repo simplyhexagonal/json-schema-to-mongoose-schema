@@ -77,7 +77,7 @@ export const genArrayLimit = (minItems?: number, maxItems?: number): Validation 
 export const typeHandler = (schemaType: JsonSchemaBaseType, required?: boolean) => {
   const {
     type: schemaTypeType,
-    pattern: match,
+    pattern,
     minLength,
     maxLength,
     minimum: min,
@@ -89,7 +89,7 @@ export const typeHandler = (schemaType: JsonSchemaBaseType, required?: boolean) 
   if (schemaTypeMap.hasOwnProperty(schemaTypeType)) {
     return {
       type: (format === 'date-time') ? Date : schemaTypeMap[schemaTypeType],
-      match,
+      match: pattern ? new RegExp(pattern) : undefined,
       minLength,
       maxLength,
       min,

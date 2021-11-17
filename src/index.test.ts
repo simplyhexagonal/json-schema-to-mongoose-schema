@@ -32,8 +32,8 @@ describe('Function jsonSchemaToMongooseSchema', () => {
     expect(_.get(userResult, 'paths.additionalName.instance')).toBe('String');
     expect(
       _.get(userResult, 'paths.additionalName.options.match')
-    ).toBe(
-      userSchema.definitions.User.properties.additionalName.pattern
+    ).toMatchObject(
+      new RegExp(userSchema.definitions.User.properties.additionalName.pattern)
     );
     expect(_.get(userResult, 'paths.addresses.instance')).toBe('Array');
     expect(_.get(userResult, 'paths.addresses.options.required')).toBe(true);
