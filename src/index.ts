@@ -89,7 +89,7 @@ export const typeHandler = (schemaType: JsonSchemaBaseType, required?: boolean) 
   if (schemaTypeMap.hasOwnProperty(schemaTypeType)) {
     return {
       type: (format === 'date-time') ? Date : schemaTypeMap[schemaTypeType],
-      match: pattern ? new RegExp(pattern) : undefined,
+      match: pattern ? new RegExp(pattern) : new RegExp(/.*/gim),
       minLength,
       maxLength,
       min,
