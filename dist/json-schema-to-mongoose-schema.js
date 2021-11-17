@@ -27,6 +27,7 @@ __export(exports, {
   default: () => src_default,
   genArrayLimit: () => genArrayLimit,
   handleProperty: () => handleProperty,
+  processAnyOf: () => processAnyOf,
   schemaTypeMap: () => schemaTypeMap,
   traverseDefinitions: () => traverseDefinitions,
   typeHandler: () => typeHandler,
@@ -36,7 +37,7 @@ var import_lodash = __toModule(require("lodash"));
 var import_mongoose = __toModule(require("mongoose"));
 
 // package.json
-var version = "1.1.0";
+var version = "1.2.0";
 
 // src/index.ts
 var schemaTypeMap = {
@@ -91,22 +92,82 @@ var typeHandler = (schemaType, required) => {
   }
   throw new Error(`Unsupported schema type: ${schemaType}`);
 };
+var processAnyOf = (property) => {
+  const { anyOf } = property;
+  if (!import_lodash.default.isArray(anyOf)) {
+    throw new Error("Invalid JSON Schema, expected anyOf to be an array");
+  }
+  if (anyOf.length === 0) {
+    throw new Error("Invalid JSON Schema, expected anyOf to have at least one item");
+  }
+  if (anyOf.length === 1) {
+    throw new Error("Invalid JSON Schema, expected anyOf to have more than one item");
+  }
+  const onlyObjects = anyOf.reduce((a, b) => {
+    return a && b.type === "object";
+  }, true);
+  if (!onlyObjects) {
+    throw new Error("Invalid JSON Schema, expected anyOf to only contain objects");
+  }
+  return anyOf.reduce((a, b) => {
+    import_lodash.default.forEach(b.properties, (value, key) => {
+      let subProperty;
+      if (value.anyOf) {
+        subProperty = processAnyOf(value);
+      } else {
+        subProperty = value;
+      }
+      if (!a.properties.hasOwnProperty(key)) {
+        a.properties[key] = subProperty;
+      } else {
+        if (a.properties[key].type !== subProperty.type) {
+          console.log(a.properties[key], subProperty);
+          throw new Error(`Invalid JSON Schema, expected anyOf to only contain objects with identical properties`);
+        }
+        a.properties[key] = import_lodash.default.mergeWith(a.properties[key], subProperty, (objValue, srcValue) => {
+          if (import_lodash.default.isArray(objValue)) {
+            return objValue.concat(srcValue);
+          }
+          if (import_lodash.default.isPlainObject(objValue)) {
+            return import_lodash.default.merge(objValue, srcValue);
+          }
+          if (objValue !== srcValue) {
+            throw new Error(`Invalid JSON Schema, values of types other than object or array must be identical`);
+          }
+          return objValue;
+        });
+      }
+    });
+    a.required = (a.required || []).concat(b.required || []);
+    return a;
+  }, {
+    type: "object",
+    properties: {},
+    required: []
+  });
+};
 var handleProperty = (key, property, subSchemaHandler, subTypeHandler) => {
   if (!import_lodash.default.isPlainObject(property)) {
     throw new Error(`Invalid JSON Schema, ${key} is not an object`);
   }
-  if (!property.hasOwnProperty("type")) {
+  if (!property.hasOwnProperty("type") && !property.hasOwnProperty("anyOf")) {
     throw new Error(`Invalid JSON Schema, ${key} is missing type`);
   }
-  if (/array|object/.test(property.type)) {
-    subSchemaHandler(key, property);
+  let finalProperty;
+  if (property.hasOwnProperty("anyOf")) {
+    finalProperty = processAnyOf(property);
+  } else {
+    finalProperty = property;
+  }
+  if (/array|object/.test(finalProperty.type)) {
+    subSchemaHandler(key, finalProperty);
     return;
   }
-  subTypeHandler(key, property);
+  subTypeHandler(key, finalProperty);
 };
 var traverseDefinitions = (definitions, definitionKey) => {
   const schema = new import_mongoose.Schema();
-  const schemaDefinition = definitionKey ? definitions[definitionKey] : definitions;
+  const schemaDefinition = definitionKey ? definitions[definitionKey] : definitions.hasOwnProperty("anyOf") ? processAnyOf(definitions) : definitions;
   if (!import_lodash.default.isPlainObject(schemaDefinition)) {
     throw new Error(`Invalid JSON Schema, definition is not an object`);
   }
@@ -164,6 +225,7 @@ var src_default = jsonSchemaToMongooseSchema;
 0 && (module.exports = {
   genArrayLimit,
   handleProperty,
+  processAnyOf,
   schemaTypeMap,
   traverseDefinitions,
   typeHandler,

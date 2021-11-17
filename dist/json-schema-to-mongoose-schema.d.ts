@@ -20,14 +20,18 @@ export interface JsonSchemaArrayType {
     type: 'array';
     minItems?: number;
     maxItems?: number;
-    items: JsonSchemaArrayType | JsonSchemaBaseType | JsonSchemaObjectType;
+    items: JsonSchemaValidTypes | JsonSchemaAnyOfType;
 }
 export interface JsonSchemaObjectType {
     type: 'object';
     properties: {
-        [k: string | symbol]: JsonSchemaBaseType | JsonSchemaObjectType | JsonSchemaArrayType;
+        [k: string | symbol]: JsonSchemaValidTypes | JsonSchemaAnyOfType;
     };
     required?: string[];
+}
+export declare type JsonSchemaValidTypes = JsonSchemaBaseType | JsonSchemaObjectType | JsonSchemaArrayType;
+export interface JsonSchemaAnyOfType {
+    anyOf: JsonSchemaObjectType[];
 }
 export interface JsonSchema {
     $schema: string;
@@ -47,8 +51,9 @@ export declare const typeHandler: (schemaType: JsonSchemaBaseType, required?: bo
     enum: string[] | undefined;
     required: boolean | undefined;
 };
-export declare const handleProperty: (key: string, property: JsonSchemaBaseType | JsonSchemaObjectType | JsonSchemaArrayType, subSchemaHandler: (key: string, subSchema: JsonSchemaObjectType | JsonSchemaArrayType, required?: string[] | undefined) => void, subTypeHandler: (key: string, schemaType: JsonSchemaBaseType) => void) => void;
-export declare const traverseDefinitions: (definitions: JsonSchema['definitions'] | JsonSchemaBaseType | JsonSchemaObjectType | JsonSchemaArrayType, definitionKey?: string | undefined) => string | Function | Schema<any, import("mongoose").Model<any, any, any, any>, {}> | Schema<any, any, any>[] | Function[] | import("mongoose").SchemaTypeOptions<any> | import("mongoose").SchemaTypeOptions<any>[] | {
+export declare const processAnyOf: (property: JsonSchemaAnyOfType) => JsonSchemaObjectType;
+export declare const handleProperty: (key: string, property: JsonSchemaBaseType | JsonSchemaObjectType | JsonSchemaArrayType | JsonSchemaAnyOfType, subSchemaHandler: (key: string, subSchema: JsonSchemaObjectType | JsonSchemaArrayType, required?: string[] | undefined) => void, subTypeHandler: (key: string, schemaType: JsonSchemaBaseType) => void) => void;
+export declare const traverseDefinitions: (definitions: JsonSchema['definitions'] | JsonSchemaValidTypes | JsonSchemaAnyOfType, definitionKey?: string | undefined) => string | Function | Schema<any, import("mongoose").Model<any, any, any, any>, {}> | Schema<any, any, any>[] | Function[] | import("mongoose").SchemaTypeOptions<any> | import("mongoose").SchemaTypeOptions<any>[] | {
     [x: string]: SchemaDefinitionProperty<any> | undefined;
 } | ({
     [path: string]: SchemaDefinitionProperty<undefined>;
