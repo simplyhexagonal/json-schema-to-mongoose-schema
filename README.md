@@ -5,12 +5,19 @@ This package was inspired by [convert-json-schema-to-mongoose](https://github.co
 
 - ability to parse JSON schemas that are greater than [JSON-Schema draft-04](https://tools.ietf.org/html/draft-04)
 - parses sub-schemas into their own nested `Schema` instances to avoid required properties in them to cause false validation errors on their optional parents
+- ability to parse `"anyOf"` properties*
 - fully type-safe
 - thoroughly tested
 
+_*as long as all alternatives are of `"type": "object"` and properties with the same name have the same value types across alternatives_
+
+There are examples of highly complex valid schemas within the [__fixtures__](https://github.com/simplyhexagonal/json-schema-to-mongoose-schema/tree/main/__fixtures__) directory.
+
+**IMPORTANT:** `$ref` is currently **not** supported.
+
 We use this project along [typescript-json-schema](https://github.com/YousefED/typescript-json-schema) to have our Typescript interfaces be the single
-source of truth that generate both the JSON schema and Mongoose schema for each entity
-within our apps.
+source of truth that generate the JSON schema that we then translate to Mongoose schema for each
+entity within our apps.
 
 ## Open source notice
 

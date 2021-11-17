@@ -12,32 +12,40 @@ export const schemaTypeMap = {
 };
 
 export interface JsonSchemaBaseType {
-  type: keyof typeof schemaTypeMap,
-  pattern?: string,
-  minLength?: number,
-  maxLength?: number,
-  minimum?: number,
-  maximum?: number,
-  enum?: string[],
-  format?: string,
+  type: keyof typeof schemaTypeMap;
+  pattern?: string;
+  minLength?: number;
+  maxLength?: number;
+  minimum?: number;
+  maximum?: number;
+  enum?: string[];
+  format?: string;
 }
 
 export interface JsonSchemaArrayType {
-  type: 'array',
-  minItems?: number,
-  maxItems?: number,
-  items: JsonSchemaArrayType | JsonSchemaBaseType | JsonSchemaObjectType,
+  type: 'array';
+  minItems?: number;
+  maxItems?: number;
+  items: JsonSchemaValidTypes | JsonSchemaAnyOfType;
 }
 
 export interface JsonSchemaObjectType {
-  type: 'object',
-  properties: { [k: string | symbol]: JsonSchemaBaseType | JsonSchemaObjectType | JsonSchemaArrayType },
-  required?: string[],
+  type: 'object';
+  properties: {
+    [k: string | symbol]: JsonSchemaValidTypes | JsonSchemaAnyOfType;
+  };
+  required?: string[];
+}
+
+export type JsonSchemaValidTypes = JsonSchemaBaseType | JsonSchemaObjectType | JsonSchemaArrayType;
+
+export interface JsonSchemaAnyOfType {
+  anyOf: JsonSchemaObjectType[];
 }
 
 export interface JsonSchema {
-  $schema: string,
-  definitions: { [k: string | symbol]: JsonSchemaObjectType },
+  $schema: string;
+  definitions: { [k: string | symbol]: JsonSchemaObjectType };
 }
 
 export type Validation = [((val: any[]) => boolean), string] | [];
@@ -94,9 +102,87 @@ export const typeHandler = (schemaType: JsonSchemaBaseType, required?: boolean) 
   throw new Error(`Unsupported schema type: ${schemaType}`);
 };
 
+export const processAnyOf = (property: JsonSchemaAnyOfType) => {
+  const { anyOf } = property;
+
+  if (!_.isArray(anyOf)) {
+    throw new Error('Invalid JSON Schema, expected anyOf to be an array');
+  }
+
+  if (anyOf.length === 0) {
+    throw new Error('Invalid JSON Schema, expected anyOf to have at least one item');
+  }
+
+  if (anyOf.length === 1) {
+    throw new Error('Invalid JSON Schema, expected anyOf to have more than one item');
+  }
+
+  const onlyObjects = anyOf.reduce((a, b) => {
+    return a && (b.type === 'object');
+  }, true);
+
+  if (!onlyObjects) {
+    throw new Error('Invalid JSON Schema, expected anyOf to only contain objects');
+  }
+
+  return anyOf.reduce(
+    (a, b) => {
+      _.forEach(b.properties, (value, key) => {
+        let subProperty: JsonSchemaValidTypes;
+
+        if ((value as JsonSchemaAnyOfType).anyOf) {
+          subProperty = processAnyOf((value as JsonSchemaAnyOfType));
+        } else {
+          subProperty = value as JsonSchemaValidTypes;
+        }
+
+        if (!a.properties.hasOwnProperty(key)) {
+          a.properties[key] = subProperty;
+        } else {
+          if (
+            (a.properties[key] as JsonSchemaValidTypes).type !== subProperty.type
+          ) {
+            console.log((a.properties[key] as JsonSchemaValidTypes), subProperty);
+            throw new Error(
+              `Invalid JSON Schema, expected anyOf to only contain objects with identical properties`
+            );
+          }
+
+          a.properties[key] = _.mergeWith(a.properties[key], subProperty, (objValue, srcValue) => {
+            if (_.isArray(objValue)) {
+              return objValue.concat(srcValue);
+            }
+
+            if (_.isPlainObject(objValue)) {
+              return _.merge(objValue, srcValue);
+            }
+
+            if (objValue !== srcValue) {
+              throw new Error(
+                `Invalid JSON Schema, values of types other than object or array must be identical`
+              );
+            }
+
+            return objValue;
+          });
+        }
+      });
+
+      a.required = (a.required || []).concat(b.required || []);
+
+      return a;
+    },
+    {
+      type: 'object',
+      properties: {},
+      required: [],
+    } as JsonSchemaObjectType,
+  );
+};
+
 export const handleProperty = (
   key: string,
-  property: JsonSchemaBaseType | JsonSchemaObjectType | JsonSchemaArrayType,
+  property: JsonSchemaBaseType | JsonSchemaObjectType | JsonSchemaArrayType | JsonSchemaAnyOfType,
   subSchemaHandler: (
     key: string,
     subSchema: JsonSchemaObjectType | JsonSchemaArrayType,
@@ -111,20 +197,28 @@ export const handleProperty = (
     throw new Error(`Invalid JSON Schema, ${key} is not an object`);
   }
 
-  if (!property.hasOwnProperty('type')) {
+  if (!property.hasOwnProperty('type') && !property.hasOwnProperty('anyOf')) {
     throw new Error(`Invalid JSON Schema, ${key} is missing type`);
   }
 
-  if ((/array|object/).test(property.type)) {
-    subSchemaHandler(key, property as JsonSchemaObjectType | JsonSchemaArrayType);
+  let finalProperty: JsonSchemaValidTypes;
+
+  if (property.hasOwnProperty('anyOf')) {
+    finalProperty = processAnyOf(property as JsonSchemaAnyOfType);
+  } else {
+    finalProperty = property as JsonSchemaValidTypes;
+  }
+
+  if ((/array|object/).test(finalProperty.type)) {
+    subSchemaHandler(key, finalProperty as JsonSchemaObjectType | JsonSchemaArrayType);
     return;
   }
 
-  subTypeHandler(key, property as JsonSchemaBaseType);
+  subTypeHandler(key, finalProperty as JsonSchemaBaseType);
 };
 
 export const traverseDefinitions = (
-  definitions: JsonSchema['definitions'] | JsonSchemaBaseType | JsonSchemaObjectType | JsonSchemaArrayType,
+  definitions: JsonSchema['definitions'] | JsonSchemaValidTypes | JsonSchemaAnyOfType,
   definitionKey?: string,
 ) => {
   const schema = new Schema();
@@ -134,7 +228,13 @@ export const traverseDefinitions = (
   ) ? (
     (definitions as JsonSchema['definitions'])[definitionKey]
   ) : (
-    definitions as JsonSchemaBaseType | JsonSchemaObjectType | JsonSchemaArrayType
+    (
+      definitions.hasOwnProperty('anyOf')
+    ) ? (
+      processAnyOf(definitions as JsonSchemaAnyOfType)
+    ) : (
+      definitions as JsonSchemaValidTypes
+    )
   );
 
   if (!_.isPlainObject(schemaDefinition)) {
@@ -179,7 +279,7 @@ export const traverseDefinitions = (
       const subSchemaType = (
         subSchema.type === 'array'
       ) ? (
-        [traverseDefinitions(subSchema.items)]
+        [traverseDefinitions(subSchema.items as JsonSchemaValidTypes)]
       ) : (
         traverseDefinitions(subSchema)
       );
@@ -206,7 +306,7 @@ export const traverseDefinitions = (
   if (schemaDefinition.type === 'array') {
     schema.add(
       {
-        type: traverseDefinitions(schemaDefinition.items),
+        type: traverseDefinitions(schemaDefinition.items as JsonSchemaValidTypes),
       },
     );
 

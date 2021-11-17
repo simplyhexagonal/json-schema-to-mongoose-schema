@@ -3,6 +3,7 @@ import _ from 'lodash';
 import jsonSchemaToMongooseSchema from './';
 
 const userSchema = require('../__fixtures__/User.json');
+const creativeWorkSchema = require('../__fixtures__/CreativeWork.json');
 
 describe('Function jsonSchemaToMongooseSchema', () => {
   it('verifies JSON schema version', () => {
@@ -17,42 +18,65 @@ describe('Function jsonSchemaToMongooseSchema', () => {
   });
 
   it('transforms JSON schema to Mongoose schema', async () => {
-    const result = jsonSchemaToMongooseSchema(userSchema, 'User');
+    const userResult = jsonSchemaToMongooseSchema(userSchema, 'User');
 
-    // console.dir(_.get(result, 'paths.emails.options.validate'), {depth: null});
+    // console.dir(_.get(userResult, 'paths.emails.options.validate'), {depth: null});
 
-    expect(result).toBeDefined();
-    expect(_.get(result, 'paths.abilities.instance')).toBe('Embedded');
-    expect(_.get(result, 'paths.abilities.options.required')).toBe(true);
-    expect(_.get(result, 'paths.abilities.schema.paths.permissions.instance')).toBe('Array');
-    expect(_.get(result, 'paths.abilities.schema.paths.permissions.options.required')).toBe(true);
-    expect(_.get(result, 'paths.abilities.schema.paths.restrictions.instance')).toBe('Array');
-    expect(_.get(result, 'paths.abilities.schema.paths.restrictions.options.required')).toBe(true);
-    expect(_.get(result, 'paths.additionalName.instance')).toBe('String');
+    expect(userResult).toBeDefined();
+    expect(_.get(userResult, 'paths.abilities.instance')).toBe('Embedded');
+    expect(_.get(userResult, 'paths.abilities.options.required')).toBe(true);
+    expect(_.get(userResult, 'paths.abilities.schema.paths.permissions.instance')).toBe('Array');
+    expect(_.get(userResult, 'paths.abilities.schema.paths.permissions.options.required')).toBe(true);
+    expect(_.get(userResult, 'paths.abilities.schema.paths.restrictions.instance')).toBe('Array');
+    expect(_.get(userResult, 'paths.abilities.schema.paths.restrictions.options.required')).toBe(true);
+    expect(_.get(userResult, 'paths.additionalName.instance')).toBe('String');
     expect(
-      _.get(result, 'paths.additionalName.options.match')
+      _.get(userResult, 'paths.additionalName.options.match')
     ).toBe(
       userSchema.definitions.User.properties.additionalName.pattern
     );
-    expect(_.get(result, 'paths.addresses.instance')).toBe('Array');
-    expect(_.get(result, 'paths.addresses.options.required')).toBe(true);
-    expect(_.get(result, 'paths.addresses.schema.paths.stellarBody.instance')).toBe('Embedded');
-    expect(_.get(result, 'paths.addresses.schema.paths.stellarBody.options.required')).toBe(false);
-    expect(_.get(result, 'paths.addresses.schema.paths.country.instance')).toBe('String');
+    expect(_.get(userResult, 'paths.addresses.instance')).toBe('Array');
+    expect(_.get(userResult, 'paths.addresses.options.required')).toBe(true);
+    expect(_.get(userResult, 'paths.addresses.schema.paths.stellarBody.instance')).toBe('Embedded');
+    expect(_.get(userResult, 'paths.addresses.schema.paths.stellarBody.options.required')).toBe(false);
+    expect(_.get(userResult, 'paths.addresses.schema.paths.country.instance')).toBe('String');
     expect(
-      _.get(result, 'paths.addresses.schema.paths.country.options.enum', []).join('')
+      _.get(userResult, 'paths.addresses.schema.paths.country.options.enum', []).join('')
     ).toBe(
       userSchema.definitions.User.properties.addresses.items.properties.country.enum.join('')
     );
-    expect(_.get(result, 'paths.birthDate.instance')).toBe('Date');
+    expect(_.get(userResult, 'paths.birthDate.instance')).toBe('Date');
     expect(
-      _.get(result, 'paths.emails.options.validate[0]')([])
+      _.get(userResult, 'paths.emails.options.validate[0]')([])
     ).toBe(false);
     expect(
-      _.get(result, 'paths.emails.options.validate[0]')([1])
+      _.get(userResult, 'paths.emails.options.validate[0]')([1])
     ).toBe(true);
     expect(
-      _.get(result, 'paths.emails.options.validate[0]')([1, 2])
+      _.get(userResult, 'paths.emails.options.validate[0]')([1, 2])
+    ).toBe(true);
+
+    const creativeWorkResult = jsonSchemaToMongooseSchema(creativeWorkSchema, 'CreativeWork');
+
+    expect(creativeWorkResult).toBeDefined();
+    expect(_.get(creativeWorkResult, 'paths.authors.instance')).toBe('Array');
+    expect(_.get(creativeWorkResult, 'paths.authors.options.required')).toBe(true);
+    expect(_.get(creativeWorkResult, 'paths.authors.schema.paths.givenName.instance')).toBe('String');
+    expect(_.get(creativeWorkResult, 'paths.authors.schema.paths.addresses.options.required')).toBe(true);
+    expect(_.get(creativeWorkResult, 'paths.dimensions.schema.paths.depth.instance')).toBe('Embedded');
+    expect(
+      _.get(
+        creativeWorkResult,
+        'paths.dimensions.schema.paths.depth.schema.paths.name.enumValues',
+        [],
+      ).includes('meter')
+    ).toBe(true);
+    expect(
+      _.get(
+        creativeWorkResult,
+        'paths.dimensions.schema.paths.depth.schema.paths.name.enumValues',
+        [],
+      ).includes('millimeter')
     ).toBe(true);
   });
 });
