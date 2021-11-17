@@ -142,7 +142,6 @@ export const processAnyOf = (property: JsonSchemaAnyOfType) => {
           if (
             (a.properties[key] as JsonSchemaValidTypes).type !== subProperty.type
           ) {
-            console.log((a.properties[key] as JsonSchemaValidTypes), subProperty);
             throw new Error(
               `Invalid JSON Schema, expected anyOf to only contain objects with identical properties`
             );
