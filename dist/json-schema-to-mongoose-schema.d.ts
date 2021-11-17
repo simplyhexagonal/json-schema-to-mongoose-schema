@@ -43,7 +43,7 @@ export declare type Validation = [((val: any[]) => boolean), string] | [];
 export declare const genArrayLimit: (minItems?: number | undefined, maxItems?: number | undefined) => Validation;
 export declare const typeHandler: (schemaType: JsonSchemaBaseType, required?: boolean | undefined) => {
     type: StringConstructor | BooleanConstructor | NumberConstructor | DateConstructor;
-    match: RegExp | undefined;
+    match: RegExp;
     minLength: number | undefined;
     maxLength: number | undefined;
     min: number | undefined;

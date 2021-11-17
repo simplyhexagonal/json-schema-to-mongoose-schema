@@ -37,7 +37,7 @@ var import_lodash = __toModule(require("lodash"));
 var import_mongoose = __toModule(require("mongoose"));
 
 // package.json
-var version = "1.2.1";
+var version = "1.2.2";
 
 // src/index.ts
 var schemaTypeMap = {
@@ -81,7 +81,7 @@ var typeHandler = (schemaType, required) => {
   if (schemaTypeMap.hasOwnProperty(schemaTypeType)) {
     return {
       type: format === "date-time" ? Date : schemaTypeMap[schemaTypeType],
-      match: pattern ? new RegExp(pattern) : void 0,
+      match: pattern ? new RegExp(pattern) : new RegExp(/.*/gim),
       minLength,
       maxLength,
       min,
