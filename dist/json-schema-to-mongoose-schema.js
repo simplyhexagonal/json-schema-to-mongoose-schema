@@ -37,7 +37,7 @@ var import_lodash = __toModule(require("lodash"));
 var import_mongoose = __toModule(require("mongoose"));
 
 // package.json
-var version = "1.2.2";
+var version = "1.2.3";
 
 // src/index.ts
 var schemaTypeMap = {
@@ -103,6 +103,11 @@ var processAnyOf = (property) => {
   if (anyOf.length === 1) {
     throw new Error("Invalid JSON Schema, expected anyOf to have more than one item");
   }
+  if (anyOf.length === 2 && (anyOf[0].type === "null" || anyOf[1].type === "null")) {
+    return {
+      type: anyOf[0].type === "null" ? anyOf[1].type : anyOf[0].type
+    };
+  }
   const onlyObjects = anyOf.reduce((a, b) => {
     return a && b.type === "object";
   }, true);
@@ -121,7 +126,6 @@ var processAnyOf = (property) => {
         a.properties[key] = subProperty;
       } else {
         if (a.properties[key].type !== subProperty.type) {
-          console.log(a.properties[key], subProperty);
           throw new Error(`Invalid JSON Schema, expected anyOf to only contain objects with identical properties`);
         }
         a.properties[key] = import_lodash.default.mergeWith(a.properties[key], subProperty, (objValue, srcValue) => {
