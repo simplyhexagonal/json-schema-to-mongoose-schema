@@ -117,6 +117,19 @@ export const processAnyOf = (property: JsonSchemaAnyOfType) => {
     throw new Error('Invalid JSON Schema, expected anyOf to have more than one item');
   }
 
+  // Special case of nullable types that are common in Mongoose
+  if (
+    anyOf.length === 2
+    && ( 
+      (anyOf[0].type as any) === 'null'
+      || (anyOf[1].type as any) === 'null'
+    )
+  ) {
+    return {
+      type: ((anyOf[0].type as any) === 'null') ? anyOf[1].type : anyOf[0].type
+    } as JsonSchemaObjectType;
+  }
+
   const onlyObjects = anyOf.reduce((a, b) => {
     return a && (b.type === 'object');
   }, true);
