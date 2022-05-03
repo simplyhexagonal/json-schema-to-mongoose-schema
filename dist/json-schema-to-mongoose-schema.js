@@ -37,7 +37,7 @@ var import_lodash = __toModule(require("lodash"));
 var import_mongoose = __toModule(require("mongoose"));
 
 // package.json
-var version = "1.2.3";
+var version = "1.2.4";
 
 // src/index.ts
 var schemaTypeMap = {
@@ -107,12 +107,6 @@ var processAnyOf = (property) => {
     return {
       type: anyOf[0].type === "null" ? anyOf[1].type : anyOf[0].type
     };
-  }
-  const onlyObjects = anyOf.reduce((a, b) => {
-    return a && b.type === "object";
-  }, true);
-  if (!onlyObjects) {
-    throw new Error("Invalid JSON Schema, expected anyOf to only contain objects");
   }
   return anyOf.reduce((a, b) => {
     import_lodash.default.forEach(b.properties, (value, key) => {
