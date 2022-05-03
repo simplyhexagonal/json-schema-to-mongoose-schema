@@ -283,7 +283,15 @@ export const traverseDefinitions = (
       const subSchemaType = (
         subSchema.type === 'array'
       ) ? (
-        [traverseDefinitions(subSchema.items as JsonSchemaValidTypes)]
+        [
+          (
+            subSchema.items
+          ) ? (
+            traverseDefinitions(subSchema.items as JsonSchemaValidTypes)
+          ) : (
+            {}
+          )
+        ]
       ) : (
         traverseDefinitions(subSchema)
       );

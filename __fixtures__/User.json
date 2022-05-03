@@ -3,6 +3,17 @@
     "definitions": {
         "User": {
             "properties": {
+                "urlList": {
+                    "anyOf": [
+                        {
+                            "type": "array",
+                            "items": {}
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
                 "gender": {
                     "anyOf": [
                         {
