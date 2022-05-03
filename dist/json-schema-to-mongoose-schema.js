@@ -37,7 +37,7 @@ var import_lodash = __toModule(require("lodash"));
 var import_mongoose = __toModule(require("mongoose"));
 
 // package.json
-var version = "1.2.4";
+var version = "1.2.5";
 
 // src/index.ts
 var schemaTypeMap = {
@@ -187,7 +187,9 @@ var traverseDefinitions = (definitions, definitionKey) => {
       });
     });
     import_lodash.default.forEach(subSchemas, ([key, subSchema]) => {
-      const subSchemaType = subSchema.type === "array" ? [traverseDefinitions(subSchema.items)] : traverseDefinitions(subSchema);
+      const subSchemaType = subSchema.type === "array" ? [
+        subSchema.items ? traverseDefinitions(subSchema.items) : {}
+      ] : traverseDefinitions(subSchema);
       const validate = genArrayLimit(subSchema.minItems, subSchema.maxItems);
       schema.add({
         [key]: {
