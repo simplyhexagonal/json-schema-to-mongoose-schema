@@ -3,6 +3,23 @@
     "definitions": {
         "User": {
             "properties": {
+                "gender": {
+                    "anyOf": [
+                        {
+                        "type": "string",
+                        "const": "M"
+                        },
+                        {
+                        "type": "string",
+                        "const": "F"
+                        },
+                        {
+                        "type": "string",
+                        "const": "N/A"
+                        }
+                    ],
+                    "type": "string"
+                },
                 "abilities": {
                     "properties": {
                         "permissions": {

@@ -6,6 +6,11 @@ const userSchema = require('../__fixtures__/User.json');
 const creativeWorkSchema = require('../__fixtures__/CreativeWork.json');
 
 describe('Function jsonSchemaToMongooseSchema', () => {
+  // it('works', () => {
+  //   const result = jsonSchemaToMongooseSchema(groupSchema, 'Group');
+
+  //   console.dir(result, { depth: null });
+  // });
   it('verifies JSON schema version', () => {
     expect(() => {
       jsonSchemaToMongooseSchema({

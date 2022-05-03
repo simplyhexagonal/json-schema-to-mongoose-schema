@@ -130,14 +130,6 @@ export const processAnyOf = (property: JsonSchemaAnyOfType) => {
     } as JsonSchemaObjectType;
   }
 
-  const onlyObjects = anyOf.reduce((a, b) => {
-    return a && (b.type === 'object');
-  }, true);
-
-  if (!onlyObjects) {
-    throw new Error('Invalid JSON Schema, expected anyOf to only contain objects');
-  }
-
   return anyOf.reduce(
     (a, b) => {
       _.forEach(b.properties, (value, key) => {
